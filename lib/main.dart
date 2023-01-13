@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:whatsapp_status_saver/android_methods.dart';
 import 'package:whatsapp_status_saver/container_page.dart';
+import 'package:whatsapp_status_saver/status_saver.dart';
 
 void main() {
   runApp(const MyHomePage(title: "WhatsApp Status Saver"));
@@ -25,36 +26,16 @@ class _MyHomePageState extends State<MyHomePage> {
     child: Text("Please grant the permission for this app to work!"),
   );
 
-  void getFiles() {
-    List<io.FileSystemEntity> statuses = io.Directory(
-            "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/.Statuses")
-        .listSync();
-    List<io.FileSystemEntity> photoFiles = [], videoFiles = [];
-    for (var element in statuses) {
-      if (element.statSync().type == io.FileSystemEntityType.file) {
-        if (element.path.endsWith(".mp4")) {
-          videoFiles.add(element);
-          continue;
-        }
-        if (element.path.endsWith(".jpg") ||
-            element.path.endsWith(".jpeg") ||
-            element.path.endsWith(".png")) {
-          photoFiles.add(element);
-          continue;
-        }
-      }
-    }
-    setState(() {
-      _photoStatuses = photoFiles;
-      _videoStatuses = videoFiles;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
     checkPermission().then((value) {
-      getFiles();
+      var statusFiles = StatusSaver.getStatusAsPhotosAndVideos();
+      debugPrint(statusFiles[0].toString());
+      setState(() {
+        _photoStatuses = statusFiles[0];
+        _videoStatuses = statusFiles[1];
+      });
     }).catchError((Object e) {
       debugPrint(e.toString());
       Fluttertoast.showToast(
@@ -93,6 +74,14 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void onRefresh() {
+    var statusFiles = StatusSaver.getStatusAsPhotosAndVideos();
+    setState(() {
+      _photoStatuses = statusFiles[0];
+      _videoStatuses = statusFiles[1];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -119,11 +108,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 ? [
                     ContainerPage(
                       data: _photoStatuses,
-                      onRefresh: getFiles,
+                      onRefresh: onRefresh,
                     ),
                     ContainerPage(
                       data: _videoStatuses,
-                      onRefresh: getFiles,
+                      onRefresh: onRefresh,
                       isVideo: true,
                     )
                   ]

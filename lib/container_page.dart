@@ -33,7 +33,6 @@ class _ContainerPageState extends State<ContainerPage> {
         itemCount: widget.data.length,
         itemBuilder: (BuildContext context, int index) {
           return StatusCard(
-            img: widget.data[index].path,
             statusFile: widget.data[index],
             isVideo: widget.isVideo,
           );
